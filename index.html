@@ -31,46 +31,56 @@
     <div id="results"></div>
 
     <script>
-        // Your keys are already integrated below
-        const API_KEY = "AIzaSyD6tGG_5pQdvtftiZ1O1Wn1E6WWjYGBWek";
-        const CX_ID = "a35763810efd745c8";
+    const API_KEY = "AIzaSyD6tGG_5pQdvtftiZ1O1Wn1E6WWjYGBWek";
+    const CX_ID = "a35763810efd745c8";
 
-        async function masterSearch() {
-            const query = document.getElementById('query').value;
-            const container = document.getElementById('results');
-            if(!query) return alert("Please enter a search term");
-            
-            container.innerHTML = "<h3>Searching the web...</h3>";
+    async function masterSearch() {
+        const query = document.getElementById('query').value;
+        const container = document.getElementById('results');
+        if(!query) return alert("Please type something!");
+        
+        container.innerHTML = "<h3>Searching...</h3>";
 
-            // URL 1: Search the whole web using your CX ID
-            const webUrl = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX_ID}&q=${query}&searchType=video`;
-            
-            try {
-                const response = await fetch(webUrl);
-                const data = await response.json();
-                container.innerHTML = ""; // Clear loading text
+        // We try a general search first (more likely to give results)
+        const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX_ID}&q=${query}+video`;
 
-                if (data.items) {
-                    data.items.forEach(item => {
-                        const thumb = item.pagemap?.cse_image?.[0]?.src || 'https://via.placeholder.com/300x160?text=No+Thumbnail';
-                        container.innerHTML += `
-                            <div class="card">
-                                <img src="${thumb}">
-                                <div class="card-info">
-                                    <span class="source-tag">${item.displayLink}</span>
-                                    <h3>${item.title}</h3>
-                                    <a href="${item.link}" target="_blank">WATCH VIDEO →</a>
-                                </div>
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            container.innerHTML = ""; 
+
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    // Try to find an image, use placeholder if none
+                    const thumb = item.pagemap?.cse_image?.[0]?.src || 
+                                  item.pagemap?.thumbnail?.[0]?.src || 
+                                  'https://via.placeholder.com/300x160?text=Video+Link';
+                    
+                    container.innerHTML += `
+                        <div class="card">
+                            <img src="${thumb}">
+                            <div class="card-info">
+                                <span class="source-tag">${item.displayLink}</span>
+                                <h3>${item.title}</h3>
+                                <a href="${item.link}" target="_blank">OPEN VIDEO →</a>
                             </div>
-                        `;
-                    });
-                } else {
-                    container.innerHTML = "<h3>No results found. Make sure 'Search the entire web' is ON in your Google settings!</h3>";
-                }
-            } catch (error) {
-                container.innerHTML = "<h3>Error: " + error + "</h3>";
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1">
+                        <h3>Still no results.</h3>
+                        <p>1. Go to your Google Search Dashboard.</p>
+                        <p>2. Make sure you added <b>youtube.com/*</b> to 'Sites to Search'.</p>
+                        <p>3. Wait 5 minutes for Google to update!</p>
+                    </div>`;
             }
+        } catch (error) {
+            container.innerHTML = "<h3>Connection Error: " + error + "</h3>";
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>

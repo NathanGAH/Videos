@@ -1,86 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Video Search</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: white; text-align: center; padding: 20px; }
-        .search-box { margin-bottom: 30px; }
-        input { padding: 12px; width: 60%; max-width: 400px; border-radius: 25px; border: none; font-size: 16px; }
-        button { padding: 12px 25px; border-radius: 25px; border: none; background: #ff0000; color: white; cursor: pointer; font-weight: bold; margin-left: 10px; }
-        button:hover { background: #cc0000; }
-        #results { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 10px; }
-        .card { background: #1e1e1e; border-radius: 12px; overflow: hidden; transition: 0.3s; border: 1px solid #333; }
-        .card:hover { transform: translateY(-5px); border-color: #ff0000; }
-        .card img { width: 100%; height: 160px; object-fit: cover; }
-        .card-info { padding: 15px; text-align: left; }
-        .card-info h3 { font-size: 14px; margin: 0 0 10px 0; height: 40px; overflow: hidden; }
-        .card-info a { color: #3ea6ff; text-decoration: none; font-size: 13px; font-weight: bold; }
-        .source-tag { font-size: 10px; background: #333; padding: 2px 6px; border-radius: 4px; color: #aaa; margin-bottom: 5px; display: inline-block; }
+        body { font-family: 'Segoe UI', sans-serif; background: #111; color: white; text-align: center; padding: 20px; }
+        input { padding: 12px; width: 300px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; }
+        button { padding: 12px 20px; background: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #results { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .card { background: #222; border-radius: 10px; padding: 10px; border: 1px solid #333; text-align: left; }
+        .card img { width: 100%; border-radius: 5px; height: 150px; object-fit: cover; }
+        .card a { color: #3ea6ff; text-decoration: none; font-size: 14px; display: block; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>Video Finder</h1>
-    <div class="search-box">
-        <input type="text" id="query" placeholder="Search for any video...">
-        <button onclick="masterSearch()">Search</button>
-    </div>
+    <h1>Video Search Engine</h1>
+    <input type="text" id="q" placeholder="Search for any video...">
+    <button onclick="doSearch()">Search</button>
 
     <div id="results"></div>
 
     <script>
-    const API_KEY = "AIzaSyD6tGG_5pQdvtftiZ1O1Wn1E6WWjYGBWek";
-    const CX_ID = "a35763810efd745c8";
+        // YOUR KEYS
+        const API_KEY = "AIzaSyDk9i3e5ToWRfg77EjrQanaF40Rle4zmrg";
+        const CX_ID = "a35763810efd745c8"; 
 
-    async function masterSearch() {
-        const query = document.getElementById('query').value;
-        const container = document.getElementById('results');
-        if(!query) return alert("Please type something!");
-        
-        container.innerHTML = "<h3>Searching...</h3>";
+        async function doSearch() {
+            const query = document.getElementById('q').value;
+            const container = document.getElementById('results');
+            container.innerHTML = "Searching...";
 
-        // We try a general search first (more likely to give results)
-        const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX_ID}&q=${query}+video`;
+            // This URL searches the web but filters for video content
+            const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX_ID}&q=${query}&searchType=video`;
 
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            container.innerHTML = ""; 
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-            if (data.items && data.items.length > 0) {
-                data.items.forEach(item => {
-                    // Try to find an image, use placeholder if none
-                    const thumb = item.pagemap?.cse_image?.[0]?.src || 
-                                  item.pagemap?.thumbnail?.[0]?.src || 
-                                  'https://via.placeholder.com/300x160?text=Video+Link';
-                    
-                    container.innerHTML += `
-                        <div class="card">
-                            <img src="${thumb}">
-                            <div class="card-info">
-                                <span class="source-tag">${item.displayLink}</span>
-                                <h3>${item.title}</h3>
-                                <a href="${item.link}" target="_blank">OPEN VIDEO →</a>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                container.innerHTML = `
-                    <div style="grid-column: 1/-1">
-                        <h3>Still no results.</h3>
-                        <p>1. Go to your Google Search Dashboard.</p>
-                        <p>2. Make sure you added <b>youtube.com/*</b> to 'Sites to Search'.</p>
-                        <p>3. Wait 5 minutes for Google to update!</p>
+                if (data.error) {
+                    container.innerHTML = `<div style="color:yellow; border:1px solid yellow; padding:10px;">
+                        <strong>API Error:</strong> ${data.error.message}<br><br>
+                        <em>Fix: Go to Google Cloud Console and click "Enable" on the <strong>Custom Search API</strong>.</em>
                     </div>`;
-            }
-        } catch (error) {
-            container.innerHTML = "<h3>Connection Error: " + error + "</h3>";
-        }
-    }
-</script>
+                    return;
+                }
 
+                container.innerHTML = ""; 
+
+                if (data.items) {
+                    data.items.forEach(item => {
+                        const thumb = item.pagemap?.cse_image?.[0]?.src || 'https://via.placeholder.com/300x150?text=Video';
+                        container.innerHTML += `
+                            <div class="card">
+                                <img src="${thumb}">
+                                <a href="${item.link}" target="_blank">${item.title}</a>
+                                <small style="color:#777">${item.displayLink}</small>
+                            </div>
+                        `;
+                    });
+                } else {
+                    container.innerHTML = "No results found. Try adding 'youtube.com' to your Sites to Search in the Google Dashboard.";
+                }
+            } catch (err) {
+                container.innerHTML = "Error connecting to Google.";
+            }
+        }
+    </script>
 </body>
 </html>

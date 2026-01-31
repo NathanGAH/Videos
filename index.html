@@ -31,7 +31,7 @@
             container.innerHTML = "Searching...";
 
             // This URL searches the web but filters for video content
-            const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX_ID}&q=${query}&searchType=video`;
+            const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX_ID}&q=${query}`;
 
             try {
                 const response = await fetch(url);
